@@ -15,6 +15,7 @@ const CATEGORY = {
   ueki:         { label: "植木剪定材", sub: "", color: "#2e8b57" },
   pet:          { label: "ペットボトル", sub: "", color: "#7ec8e3" },
   inkanbin:     { label: "飲食用カン・ビン", sub: "", color: "#7a5ea8" },
+  shokuyu:      { label: "使用済み食用油", sub: "", color: "#7a6a55" },
   kikenyugai:   { label: "危険・有害ごみ", sub: "", color: "#d6336c" },
   kinshi:       { label: "市で収集できないもの", sub: "販売店・専門業者へ", color: "#c0392b" },
   sodai:        { label: "粗大ごみ", sub: "粗大ごみシール600円分", color: "#2f4f6f" },
