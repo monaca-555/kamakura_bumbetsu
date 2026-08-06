@@ -248,7 +248,7 @@
     }
   }
 
-  var FORECAST_DAYS = 5;
+  var FORECAST_RANGE_DAYS = 30; // 今日から数えるカレンダー日数（土日は表示から除く）
 
   function computeScheduleForDate(district, date) {
     var dayKey = WEEKDAY_KEYS[date.getDay()];
@@ -274,7 +274,7 @@
 
     var label = document.createElement("p");
     label.className = "forecast-day-label";
-    label.textContent = daysFromToday === 0 ? "今日" : daysFromToday === 1 ? "明日" : WEEKDAY_KANJI[info.dayKey] + "曜日";
+    label.textContent = daysFromToday === 0 ? "きょう" : daysFromToday === 1 ? "あした" : WEEKDAY_KANJI[info.dayKey] + "曜日";
     card.appendChild(label);
 
     var dateEl = document.createElement("p");
@@ -313,18 +313,12 @@
     var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     var frag = document.createDocumentFragment();
 
-    var cursor = new Date(today);
-    var shown = 0;
-    var safety = 0;
-    while (shown < FORECAST_DAYS && safety < 30) {
-      var dayKey = WEEKDAY_KEYS[cursor.getDay()];
+    for (var daysFromToday = 0; daysFromToday < FORECAST_RANGE_DAYS; daysFromToday++) {
+      var date = new Date(today.getFullYear(), today.getMonth(), today.getDate() + daysFromToday);
+      var dayKey = WEEKDAY_KEYS[date.getDay()];
       if (dayKey !== "sat" && dayKey !== "sun") {
-        var daysFromToday = Math.round((cursor - today) / 86400000);
-        frag.appendChild(buildForecastDay(district, new Date(cursor), daysFromToday));
-        shown++;
+        frag.appendChild(buildForecastDay(district, date, daysFromToday));
       }
-      cursor.setDate(cursor.getDate() + 1);
-      safety++;
     }
     forecastScrollEl.appendChild(frag);
   }
