@@ -3,10 +3,22 @@
 
   var searchInput = document.getElementById("search");
   var clearBtn = document.getElementById("clear-btn");
+  var searchBtn = document.getElementById("search-btn");
   var filterRow = document.getElementById("filter-row");
   var resultsEl = document.getElementById("results");
   var resultCountEl = document.getElementById("result-count");
   var emptyStateEl = document.getElementById("empty-state");
+
+  var appTitle = document.getElementById("app-title");
+  var appSubtitle = document.getElementById("app-subtitle");
+  var changeAreaBtn = document.getElementById("change-area-btn");
+  var areaPicker = document.getElementById("area-picker");
+  var areaSelect = document.getElementById("area-select");
+  var areaConfirmBtn = document.getElementById("area-confirm-btn");
+  var areaSkipBtn = document.getElementById("area-skip-btn");
+  var todayCard = document.getElementById("today-card");
+  var todayDateEl = document.getElementById("today-date");
+  var todayItemsEl = document.getElementById("today-items");
 
   var sheet = document.getElementById("detail-sheet");
   var sheetBackdrop = document.getElementById("sheet-backdrop");
@@ -190,6 +202,146 @@
   });
 
   searchInput.addEventListener("input", render);
+
+  searchBtn.addEventListener("click", function () {
+    render();
+    searchInput.blur();
+  });
+
+  searchInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+      render();
+      searchInput.blur();
+    }
+  });
+
+  // --- 地区選択・今日の収集案内 ---
+  var AREA_STORAGE_KEY = "kamakura-bumbetsu-area";
+  var WEEKDAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+  var WEEKDAY_KANJI = { sun: "日", mon: "月", tue: "火", wed: "水", thu: "木", fri: "金", sat: "土" };
+
+  function buildAreaOptions() {
+    var frag = document.createDocumentFragment();
+    AREA_INDEX.forEach(function (entry) {
+      var opt = document.createElement("option");
+      opt.value = entry.area;
+      opt.textContent = entry.area;
+      frag.appendChild(opt);
+    });
+    areaSelect.appendChild(frag);
+  }
+
+  function findAreaEntry(areaName) {
+    return AREA_INDEX.find(function (e) { return e.area === areaName; });
+  }
+
+  function saveArea(areaName) {
+    try {
+      localStorage.setItem(AREA_STORAGE_KEY, areaName);
+    } catch (e) { /* localStorageが使えない環境は無視 */ }
+  }
+
+  function loadSavedArea() {
+    try {
+      return localStorage.getItem(AREA_STORAGE_KEY);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function computeTodaySchedule(district) {
+    var now = new Date();
+    var dayKey = WEEKDAY_KEYS[now.getDay()];
+    var dateLabel = (now.getMonth() + 1) + "月" + now.getDate() + "日（" + WEEKDAY_KANJI[dayKey] + "）";
+
+    if (dayKey === "sat" || dayKey === "sun") {
+      return { dateLabel: dateLabel, entries: [], nth: null, noCollectionDay: true };
+    }
+
+    var nth = Math.ceil(now.getDate() / 7);
+    var dayEntries = district.schedule[dayKey] || [];
+    var entries = dayEntries.filter(function (e) {
+      return e.nth === null || e.nth === nth;
+    });
+
+    return { dateLabel: dateLabel, entries: entries, nth: nth, weekdayKanji: WEEKDAY_KANJI[dayKey], noCollectionDay: false };
+  }
+
+  function renderTodayCard(district) {
+    var info = computeTodaySchedule(district);
+    todayCard.hidden = false;
+
+    if (info.noCollectionDay) {
+      todayDateEl.textContent = info.dateLabel;
+      todayItemsEl.innerHTML = '<p class="today-empty">今日は資源物・ごみの収集はありません</p>';
+      return;
+    }
+
+    todayDateEl.textContent = info.dateLabel + "・第" + info.nth + info.weekdayKanji + "曜日";
+
+    todayItemsEl.innerHTML = "";
+    if (info.entries.length === 0) {
+      todayItemsEl.innerHTML = '<p class="today-empty">今日出せる資源物・ごみはありません</p>';
+      return;
+    }
+
+    var frag = document.createDocumentFragment();
+    info.entries.forEach(function (e) {
+      var cat = CATEGORY[e.cat];
+      if (!cat) return;
+      var chip = document.createElement("span");
+      chip.className = "chip";
+      chip.style.background = cat.color;
+      chip.textContent = cat.label;
+      frag.appendChild(chip);
+    });
+    todayItemsEl.appendChild(frag);
+  }
+
+  function applyArea(areaName) {
+    var entry = findAreaEntry(areaName);
+    if (!entry) return false;
+    var district = DISTRICTS[entry.districtIndex];
+
+    appTitle.textContent = "鎌倉市ごみ分別しらべ（" + areaName + "地区）";
+    appSubtitle.textContent = district.label + " の収集情報";
+    changeAreaBtn.hidden = false;
+    renderTodayCard(district);
+    areaPicker.hidden = true;
+    return true;
+  }
+
+  function openAreaPicker() {
+    var saved = loadSavedArea();
+    if (saved) areaSelect.value = saved;
+    areaConfirmBtn.disabled = !areaSelect.value;
+    areaPicker.hidden = false;
+  }
+
+  areaSelect.addEventListener("change", function () {
+    areaConfirmBtn.disabled = !areaSelect.value;
+  });
+
+  areaConfirmBtn.addEventListener("click", function () {
+    var areaName = areaSelect.value;
+    if (!areaName) return;
+    saveArea(areaName);
+    applyArea(areaName);
+  });
+
+  areaSkipBtn.addEventListener("click", function () {
+    areaPicker.hidden = true;
+  });
+
+  changeAreaBtn.addEventListener("click", openAreaPicker);
+
+  buildAreaOptions();
+  var savedArea = loadSavedArea();
+  if (savedArea && applyArea(savedArea)) {
+    // 保存済みの地区を復元できた
+  } else {
+    openAreaPicker();
+  }
 
   buildFilterChips();
   render();

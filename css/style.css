@@ -51,14 +51,140 @@ body {
 
 .app-header h1 {
   margin: 0;
-  font-size: 1.35rem;
-  letter-spacing: 0.02em;
+  font-size: 1.2rem;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
 }
 
 .app-header .subtitle {
   margin: 6px 0 0;
   font-size: 0.78rem;
   opacity: 0.9;
+}
+
+.change-area-btn {
+  margin: 10px 0 0;
+  border: 1px solid rgba(255,255,255,0.6);
+  background: transparent;
+  color: var(--accent-contrast);
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-size: 0.74rem;
+  cursor: pointer;
+}
+
+.change-area-btn:active { background: rgba(255,255,255,0.15); }
+
+/* --- area picker --- */
+.area-picker {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.area-picker[hidden] { display: none; }
+
+.area-picker-card {
+  width: 100%;
+  max-width: 460px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 22px 20px calc(20px + var(--safe-bottom));
+}
+
+.area-picker-card h2 {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+}
+
+.area-picker-desc {
+  margin: 0 0 16px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+#area-select {
+  width: 100%;
+  font-size: 0.95rem;
+  padding: 6px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  margin-bottom: 14px;
+}
+
+#area-select option {
+  padding: 8px 6px;
+}
+
+.area-confirm-btn {
+  width: 100%;
+  border: none;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-radius: 10px;
+  padding: 13px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+.area-confirm-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.area-skip-btn {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  padding: 8px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* --- today card --- */
+.today-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px 16px;
+  margin: 14px 0 4px;
+}
+
+.today-date {
+  margin: 0 0 8px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.today-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.today-items .chip {
+  font-size: 0.85rem;
+  padding: 7px 14px;
+}
+
+.today-empty {
+  font-size: 0.88rem;
+  color: var(--text-muted);
 }
 
 main {
@@ -109,6 +235,21 @@ main {
   box-shadow: var(--shadow);
   cursor: pointer;
 }
+
+.search-btn {
+  border: none;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-radius: var(--radius);
+  padding: 0 18px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  flex: none;
+}
+
+.search-btn:active { opacity: 0.85; }
 
 .filter-row {
   display: flex;
