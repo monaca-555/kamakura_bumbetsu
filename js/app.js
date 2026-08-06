@@ -16,9 +16,8 @@
   var areaSelect = document.getElementById("area-select");
   var areaConfirmBtn = document.getElementById("area-confirm-btn");
   var areaSkipBtn = document.getElementById("area-skip-btn");
-  var todayCard = document.getElementById("today-card");
-  var todayDateEl = document.getElementById("today-date");
-  var todayItemsEl = document.getElementById("today-items");
+  var forecastCard = document.getElementById("forecast-card");
+  var forecastScrollEl = document.getElementById("forecast-scroll");
 
   var sheet = document.getElementById("detail-sheet");
   var sheetBackdrop = document.getElementById("sheet-backdrop");
@@ -249,53 +248,74 @@
     }
   }
 
-  function computeTodaySchedule(district) {
-    var now = new Date();
-    var dayKey = WEEKDAY_KEYS[now.getDay()];
-    var dateLabel = (now.getMonth() + 1) + "月" + now.getDate() + "日（" + WEEKDAY_KANJI[dayKey] + "）";
+  var FORECAST_DAYS = 5;
+
+  function computeScheduleForDate(district, date) {
+    var dayKey = WEEKDAY_KEYS[date.getDay()];
 
     if (dayKey === "sat" || dayKey === "sun") {
-      return { dateLabel: dateLabel, entries: [], nth: null, noCollectionDay: true };
+      return { dayKey: dayKey, entries: [], nth: null, noCollectionDay: true };
     }
 
-    var nth = Math.ceil(now.getDate() / 7);
+    var nth = Math.ceil(date.getDate() / 7);
     var dayEntries = district.schedule[dayKey] || [];
     var entries = dayEntries.filter(function (e) {
       return e.nth === null || e.nth === nth;
     });
 
-    return { dateLabel: dateLabel, entries: entries, nth: nth, weekdayKanji: WEEKDAY_KANJI[dayKey], noCollectionDay: false };
+    return { dayKey: dayKey, entries: entries, nth: nth, noCollectionDay: false };
   }
 
-  function renderTodayCard(district) {
-    var info = computeTodaySchedule(district);
-    todayCard.hidden = false;
+  function buildForecastDay(district, date, offset) {
+    var info = computeScheduleForDate(district, date);
+
+    var card = document.createElement("div");
+    card.className = "forecast-day" + (offset === 0 ? " is-today" : "");
+
+    var label = document.createElement("p");
+    label.className = "forecast-day-label";
+    label.textContent = offset === 0 ? "今日" : offset === 1 ? "明日" : WEEKDAY_KANJI[info.dayKey] + "曜日";
+    card.appendChild(label);
+
+    var dateEl = document.createElement("p");
+    dateEl.className = "forecast-day-date";
+    dateEl.textContent = (date.getMonth() + 1) + "/" + date.getDate() + "（" + WEEKDAY_KANJI[info.dayKey] + "）";
+    card.appendChild(dateEl);
+
+    var itemsWrap = document.createElement("div");
+    itemsWrap.className = "forecast-day-items";
 
     if (info.noCollectionDay) {
-      todayDateEl.textContent = info.dateLabel;
-      todayItemsEl.innerHTML = '<p class="today-empty">今日は資源物・ごみの収集はありません</p>';
-      return;
+      itemsWrap.innerHTML = '<p class="forecast-day-empty">収集なし</p>';
+    } else if (info.entries.length === 0) {
+      itemsWrap.innerHTML = '<p class="forecast-day-empty">対象品目なし</p>';
+    } else {
+      info.entries.forEach(function (e) {
+        var cat = CATEGORY[e.cat];
+        if (!cat) return;
+        var chip = document.createElement("span");
+        chip.className = "chip";
+        chip.style.background = cat.color;
+        chip.textContent = cat.label;
+        itemsWrap.appendChild(chip);
+      });
     }
+    card.appendChild(itemsWrap);
 
-    todayDateEl.textContent = info.dateLabel + "・第" + info.nth + info.weekdayKanji + "曜日";
+    return card;
+  }
 
-    todayItemsEl.innerHTML = "";
-    if (info.entries.length === 0) {
-      todayItemsEl.innerHTML = '<p class="today-empty">今日出せる資源物・ごみはありません</p>';
-      return;
-    }
+  function renderForecast(district) {
+    forecastCard.hidden = false;
+    forecastScrollEl.innerHTML = "";
 
+    var today = new Date();
     var frag = document.createDocumentFragment();
-    info.entries.forEach(function (e) {
-      var cat = CATEGORY[e.cat];
-      if (!cat) return;
-      var chip = document.createElement("span");
-      chip.className = "chip";
-      chip.style.background = cat.color;
-      chip.textContent = cat.label;
-      frag.appendChild(chip);
-    });
-    todayItemsEl.appendChild(frag);
+    for (var i = 0; i < FORECAST_DAYS; i++) {
+      var date = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i);
+      frag.appendChild(buildForecastDay(district, date, i));
+    }
+    forecastScrollEl.appendChild(frag);
   }
 
   function applyArea(areaName) {
@@ -306,7 +326,7 @@
     appTitle.textContent = "鎌倉市ごみ分別しらべ（" + areaName + "地区）";
     appSubtitle.textContent = district.label + " の収集情報";
     changeAreaBtn.hidden = false;
-    renderTodayCard(district);
+    renderForecast(district);
     areaPicker.hidden = true;
     return true;
   }
