@@ -301,6 +301,24 @@ DISTRICTS.forEach(function (d, i) {
   });
 });
 
+// 表示順の調整：「◯丁目」など番地表記のある地区の直後に、対応する「（未表示地区）」を並べる
+var HYOJI_REORDER_PAIRS = [
+  ["腰越一丁目〜五丁目", "腰越（未表示地区）"],
+  ["梶原一丁目〜五丁目", "梶原（未表示地区）"],
+  ["寺分一丁目〜三丁目", "寺分（未表示地区）"],
+  ["台一丁目〜五丁目", "台（未表示地区）"],
+  ["大船一丁目〜五丁目", "大船（未表示地区）"],
+];
+HYOJI_REORDER_PAIRS.forEach(function (pair) {
+  var numberedName = pair[0], hyojiName = pair[1];
+  var hyojiIdx = AREA_INDEX.findIndex(function (e) { return e.area === hyojiName; });
+  if (hyojiIdx === -1) return;
+  var entry = AREA_INDEX.splice(hyojiIdx, 1)[0];
+  var numberedIdx = AREA_INDEX.findIndex(function (e) { return e.area === numberedName; });
+  if (numberedIdx === -1) { AREA_INDEX.splice(hyojiIdx, 0, entry); return; }
+  AREA_INDEX.splice(numberedIdx + 1, 0, entry);
+});
+
 if (typeof module !== "undefined") {
   module.exports = { DISTRICTS, AREA_INDEX, WEEKDAYS, WEEKDAY_LABEL };
 }
