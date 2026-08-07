@@ -1,6 +1,7 @@
 (function () {
   "use strict";
 
+  var themeToggleBtn = document.getElementById("theme-toggle");
   var searchInput = document.getElementById("search");
   var clearBtn = document.getElementById("clear-btn");
   var searchBtn = document.getElementById("search-btn");
@@ -16,9 +17,8 @@
   var areaSelect = document.getElementById("area-select");
   var areaConfirmBtn = document.getElementById("area-confirm-btn");
   var areaSkipBtn = document.getElementById("area-skip-btn");
-  var todayCard = document.getElementById("today-card");
-  var todayDateEl = document.getElementById("today-date");
-  var todayItemsEl = document.getElementById("today-items");
+  var forecastCard = document.getElementById("forecast-card");
+  var forecastScrollEl = document.getElementById("forecast-scroll");
 
   var sheet = document.getElementById("detail-sheet");
   var sheetBackdrop = document.getElementById("sheet-backdrop");
@@ -249,53 +249,79 @@
     }
   }
 
-  function computeTodaySchedule(district) {
-    var now = new Date();
-    var dayKey = WEEKDAY_KEYS[now.getDay()];
-    var dateLabel = (now.getMonth() + 1) + "月" + now.getDate() + "日（" + WEEKDAY_KANJI[dayKey] + "）";
+  var FORECAST_RANGE_DAYS = 30; // 今日から数えるカレンダー日数（土日は表示から除く）
+
+  function computeScheduleForDate(district, date) {
+    var dayKey = WEEKDAY_KEYS[date.getDay()];
 
     if (dayKey === "sat" || dayKey === "sun") {
-      return { dateLabel: dateLabel, entries: [], nth: null, noCollectionDay: true };
+      return { dayKey: dayKey, entries: [], nth: null, noCollectionDay: true };
     }
 
-    var nth = Math.ceil(now.getDate() / 7);
+    var nth = Math.ceil(date.getDate() / 7);
     var dayEntries = district.schedule[dayKey] || [];
     var entries = dayEntries.filter(function (e) {
       return e.nth === null || e.nth === nth;
     });
 
-    return { dateLabel: dateLabel, entries: entries, nth: nth, weekdayKanji: WEEKDAY_KANJI[dayKey], noCollectionDay: false };
+    return { dayKey: dayKey, entries: entries, nth: nth, noCollectionDay: false };
   }
 
-  function renderTodayCard(district) {
-    var info = computeTodaySchedule(district);
-    todayCard.hidden = false;
+  function buildForecastDay(district, date, daysFromToday) {
+    var info = computeScheduleForDate(district, date);
+
+    var card = document.createElement("div");
+    card.className = "forecast-day" + (daysFromToday === 0 ? " is-today" : "");
+
+    var label = document.createElement("p");
+    label.className = "forecast-day-label";
+    label.textContent = daysFromToday === 0 ? "きょう" : daysFromToday === 1 ? "あした" : WEEKDAY_KANJI[info.dayKey] + "曜日";
+    card.appendChild(label);
+
+    var dateEl = document.createElement("p");
+    dateEl.className = "forecast-day-date";
+    dateEl.textContent = (date.getMonth() + 1) + "/" + date.getDate() + "（" + WEEKDAY_KANJI[info.dayKey] + "）";
+    card.appendChild(dateEl);
+
+    var itemsWrap = document.createElement("div");
+    itemsWrap.className = "forecast-day-items";
 
     if (info.noCollectionDay) {
-      todayDateEl.textContent = info.dateLabel;
-      todayItemsEl.innerHTML = '<p class="today-empty">今日は資源物・ごみの収集はありません</p>';
-      return;
+      itemsWrap.innerHTML = '<p class="forecast-day-empty">収集なし</p>';
+    } else if (info.entries.length === 0) {
+      itemsWrap.innerHTML = '<p class="forecast-day-empty">対象品目なし</p>';
+    } else {
+      info.entries.forEach(function (e) {
+        var cat = CATEGORY[e.cat];
+        if (!cat) return;
+        var chip = document.createElement("span");
+        chip.className = "chip";
+        chip.style.background = cat.color;
+        chip.textContent = cat.label;
+        itemsWrap.appendChild(chip);
+      });
     }
+    card.appendChild(itemsWrap);
 
-    todayDateEl.textContent = info.dateLabel + "・第" + info.nth + info.weekdayKanji + "曜日";
+    return card;
+  }
 
-    todayItemsEl.innerHTML = "";
-    if (info.entries.length === 0) {
-      todayItemsEl.innerHTML = '<p class="today-empty">今日出せる資源物・ごみはありません</p>';
-      return;
-    }
+  function renderForecast(district) {
+    forecastCard.hidden = false;
+    forecastScrollEl.innerHTML = "";
 
+    var now = new Date();
+    var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     var frag = document.createDocumentFragment();
-    info.entries.forEach(function (e) {
-      var cat = CATEGORY[e.cat];
-      if (!cat) return;
-      var chip = document.createElement("span");
-      chip.className = "chip";
-      chip.style.background = cat.color;
-      chip.textContent = cat.label;
-      frag.appendChild(chip);
-    });
-    todayItemsEl.appendChild(frag);
+
+    for (var daysFromToday = 0; daysFromToday < FORECAST_RANGE_DAYS; daysFromToday++) {
+      var date = new Date(today.getFullYear(), today.getMonth(), today.getDate() + daysFromToday);
+      var dayKey = WEEKDAY_KEYS[date.getDay()];
+      if (dayKey !== "sat" && dayKey !== "sun") {
+        frag.appendChild(buildForecastDay(district, date, daysFromToday));
+      }
+    }
+    forecastScrollEl.appendChild(frag);
   }
 
   function applyArea(areaName) {
@@ -303,10 +329,10 @@
     if (!entry) return false;
     var district = DISTRICTS[entry.districtIndex];
 
-    appTitle.textContent = "鎌倉市ごみ分別しらべ（" + areaName + "地区）";
-    appSubtitle.textContent = district.label + " の収集情報";
+    appTitle.textContent = "鎌倉市ごみ分別しらべ";
+    appSubtitle.innerHTML = '<span class="area-name">' + escapeHtml(district.label) + '</span> 地区の収集情報';
     changeAreaBtn.hidden = false;
-    renderTodayCard(district);
+    renderForecast(district);
     areaPicker.hidden = true;
     return true;
   }
@@ -334,6 +360,40 @@
   });
 
   changeAreaBtn.addEventListener("click", openAreaPicker);
+
+  // --- ライト/ダーク手動切り替え ---
+  var THEME_STORAGE_KEY = "kamakura-bumbetsu-theme";
+
+  function getSystemTheme() {
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+
+  function loadStoredTheme() {
+    try {
+      return localStorage.getItem(THEME_STORAGE_KEY);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function applyTheme(theme) {
+    if (theme) {
+      document.documentElement.setAttribute("data-theme", theme);
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+    }
+  }
+
+  applyTheme(loadStoredTheme());
+
+  themeToggleBtn.addEventListener("click", function () {
+    var current = loadStoredTheme() || getSystemTheme();
+    var next = current === "dark" ? "light" : "dark";
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, next);
+    } catch (e) { /* localStorageが使えない環境は無視 */ }
+    applyTheme(next);
+  });
 
   buildAreaOptions();
   var savedArea = loadSavedArea();
