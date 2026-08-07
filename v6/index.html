@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#2f6f5e">
+<title>鎌倉市ごみ分別しらべ</title>
+<meta name="description" content="鎌倉市の資源物・ごみ分別ガイド（50音順索引・地区別収集カレンダー）を検索できる非公式ツール">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>♻️</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+<!-- Google Analytics (GA4) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KMPPKHDLQN"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-KMPPKHDLQN');
+</script>
+</head>
+<body>
+<header class="app-header">
+  <button id="theme-toggle" type="button" class="theme-toggle" aria-label="表示テーマを切り替え">
+    <svg class="theme-icon icon-sun" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.6"/>
+      <path stroke="currentColor" stroke-width="1.6" stroke-linecap="round" d="M12 2.5v2.4M12 19.1v2.4M4.4 4.4l1.7 1.7M17.9 17.9l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.4 19.6l1.7-1.7M17.9 6.1l1.7-1.7"/>
+    </svg>
+    <svg class="theme-icon icon-moon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" d="M20 14.3A8.3 8.3 0 1 1 9.7 4a6.6 6.6 0 0 0 10.3 10.3Z"/>
+    </svg>
+  </button>
+  <h1 id="app-title">鎌倉市ごみ分別しらべ</h1>
+  <p class="subtitle" id="app-subtitle">鎌倉市配布冊子より 品目の分別区分を検索（非公式）</p>
+  <button id="change-area-btn" type="button" class="change-area-btn" hidden>地区を変更する</button>
+</header>
+
+<!-- 地区選択（初回・地区変更時） -->
+<div id="area-picker" class="area-picker" hidden>
+  <div class="area-picker-card">
+    <h2>お住まいの地区を選んでください</h2>
+    <p class="area-picker-desc">選ぶと、今日出せる資源物・ごみが分かります。あとから変更もできます。</p>
+    <select id="area-select" size="8">
+      <option value="" disabled selected>-- 町名・地区を選択 --</option>
+    </select>
+    <button id="area-confirm-btn" type="button" class="area-confirm-btn" disabled>この地区に決定</button>
+    <button id="area-skip-btn" type="button" class="area-skip-btn">あとで選ぶ（品目検索だけ使う）</button>
+  </div>
+</div>
+
+<main>
+  <section id="forecast-card" class="forecast-card" hidden>
+    <p class="forecast-title">これから1か月の収集予定</p>
+    <div class="forecast-scroll" id="forecast-scroll"></div>
+  </section>
+
+  <div class="search-wrap">
+    <input
+      id="search"
+      type="search"
+      inputmode="search"
+      placeholder="品名を入力（例：スプレー缶、傘、ペットボトル）"
+      autocomplete="off"
+    >
+    <button id="clear-btn" type="button" aria-label="クリア" hidden>&times;</button>
+    <button id="search-btn" type="button" class="search-btn" aria-label="検索">検索</button>
+  </div>
+
+  <div class="filter-row" id="filter-row" aria-label="区分で絞り込み"></div>
+
+  <p class="result-count" id="result-count" aria-live="polite"></p>
+
+  <ul id="results" class="results"></ul>
+
+  <p id="empty-state" class="empty-state" hidden>
+    該当する品目が見つかりませんでした。<br>
+    別のキーワードで試すか、記載のない品目は鎌倉市ごみ対策課へお問い合わせください。
+  </p>
+</main>
+
+<footer class="app-footer">
+  <p>
+    出典：鎌倉市「資源物とごみの品目と分別区分（50音順索引）」「地区別収集カレンダー」<br>
+    このサイトは個人が作成した非公式ツールです。最新の情報は必ず
+    <a href="https://www.city.kamakura.kanagawa.jp/" target="_blank" rel="noopener">鎌倉市公式サイト</a>
+    でご確認ください。記載のない品目・不明点、収集日の最新情報は市のごみ対策課へお問い合わせください。
+  </p>
+</footer>
+
+<div id="detail-sheet" class="sheet" hidden>
+  <div class="sheet-backdrop" id="sheet-backdrop"></div>
+  <div class="sheet-content" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+    <button class="sheet-close" id="sheet-close" aria-label="閉じる">&times;</button>
+    <h2 id="sheet-title"></h2>
+    <p class="sheet-category"><span id="sheet-cat-chip" class="chip"></span><span id="sheet-cat-sub"></span></p>
+    <p class="sheet-note" id="sheet-note"></p>
+    <p class="sheet-page" id="sheet-page"></p>
+  </div>
+</div>
+
+<script src="data/items.js?v=20260807ga4b"></script>
+<script src="data/districts.js?v=20260807ga4b"></script>
+<script src="js/app.js?v=20260807ga4b"></script>
+</body>
+</html>
