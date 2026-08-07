@@ -122,21 +122,9 @@ body {
   opacity: 0.9;
 }
 
-.area-badge {
-  margin: 10px 0 0;
-}
-
-.area-badge[hidden] { display: none; }
-
-.area-badge #area-badge-text {
-  display: inline-block;
-  padding: 5px 16px;
-  border-radius: 999px;
-  background: var(--accent-contrast);
-  color: var(--accent);
-  font-size: 1rem;
+.app-header .subtitle .area-name {
   font-weight: 800;
-  letter-spacing: 0.02em;
+  color: #f5d67a;
 }
 
 .change-area-btn {
