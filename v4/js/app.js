@@ -11,6 +11,8 @@
   var emptyStateEl = document.getElementById("empty-state");
 
   var appTitle = document.getElementById("app-title");
+  var areaBadge = document.getElementById("area-badge");
+  var areaBadgeText = document.getElementById("area-badge-text");
   var appSubtitle = document.getElementById("app-subtitle");
   var changeAreaBtn = document.getElementById("change-area-btn");
   var areaPicker = document.getElementById("area-picker");
@@ -330,6 +332,8 @@
     var district = DISTRICTS[entry.districtIndex];
 
     appTitle.textContent = "鎌倉市ごみ分別しらべ";
+    areaBadgeText.textContent = areaName;
+    areaBadge.hidden = false;
     appSubtitle.textContent = district.label + " 地区の収集情報";
     changeAreaBtn.hidden = false;
     renderForecast(district);
