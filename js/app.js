@@ -328,8 +328,8 @@
     if (!entry) return false;
     var district = DISTRICTS[entry.districtIndex];
 
-    appTitle.textContent = "鎌倉市ごみ分別しらべ（" + areaName + "地区）";
-    appSubtitle.textContent = district.label + " の収集情報";
+    appTitle.textContent = "鎌倉市ごみ分別しらべ［" + areaName + "］";
+    appSubtitle.textContent = district.label + " 地区の収集情報";
     changeAreaBtn.hidden = false;
     renderForecast(district);
     areaPicker.hidden = true;
