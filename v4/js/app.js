@@ -1,6 +1,7 @@
 (function () {
   "use strict";
 
+  var themeToggleBtn = document.getElementById("theme-toggle");
   var searchInput = document.getElementById("search");
   var clearBtn = document.getElementById("clear-btn");
   var searchBtn = document.getElementById("search-btn");
@@ -359,6 +360,40 @@
   });
 
   changeAreaBtn.addEventListener("click", openAreaPicker);
+
+  // --- ライト/ダーク手動切り替え ---
+  var THEME_STORAGE_KEY = "kamakura-bumbetsu-theme";
+
+  function getSystemTheme() {
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+
+  function loadStoredTheme() {
+    try {
+      return localStorage.getItem(THEME_STORAGE_KEY);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function applyTheme(theme) {
+    if (theme) {
+      document.documentElement.setAttribute("data-theme", theme);
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+    }
+  }
+
+  applyTheme(loadStoredTheme());
+
+  themeToggleBtn.addEventListener("click", function () {
+    var current = loadStoredTheme() || getSystemTheme();
+    var next = current === "dark" ? "light" : "dark";
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, next);
+    } catch (e) { /* localStorageが使えない環境は無視 */ }
+    applyTheme(next);
+  });
 
   buildAreaOptions();
   var savedArea = loadSavedArea();
