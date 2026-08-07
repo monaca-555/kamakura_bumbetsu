@@ -201,16 +201,40 @@
     render();
   });
 
-  searchInput.addEventListener("input", render);
+  var searchTrackTimer = null;
+  var lastTrackedTerm = "";
+
+  function trackSearchNow() {
+    var term = searchInput.value.trim();
+    if (!term || term === lastTrackedTerm) return;
+    lastTrackedTerm = term;
+    if (typeof gtag === "function") {
+      gtag("event", "search", { search_term: term });
+    }
+  }
+
+  function scheduleSearchTracking() {
+    clearTimeout(searchTrackTimer);
+    searchTrackTimer = setTimeout(trackSearchNow, 800);
+  }
+
+  searchInput.addEventListener("input", function () {
+    render();
+    scheduleSearchTracking();
+  });
 
   searchBtn.addEventListener("click", function () {
     render();
+    clearTimeout(searchTrackTimer);
+    trackSearchNow();
     searchInput.blur();
   });
 
   searchInput.addEventListener("keydown", function (e) {
     if (e.key === "Enter") {
       render();
+      clearTimeout(searchTrackTimer);
+      trackSearchNow();
       searchInput.blur();
     }
   });
